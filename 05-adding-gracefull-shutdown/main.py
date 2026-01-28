@@ -1,3 +1,15 @@
+"""
+Adding Graceful Shutdown
+
+To ensure a graceful termination, meaning that after receiving a shutdown signal
+the pipeline stops producing items and drains out the items from the queues before
+exiting.
+
+The first component of the pipeline depends on the `shutdown_event` event to decide
+when to stop producing tasks, while the latter components check if the previous
+task is completed and if the queue is empty to decide whether they are done or not
+"""
+
 import asyncio
 import dataclasses
 import time
@@ -66,6 +78,12 @@ async def transformer_loop(
         batch = await producer_buffer.get()
         transformed_batch = await transformer(batch)
         await transformer_buffer.put(transformed_batch)
+
+        # While not needed in this example, it is a good practice
+        # to call task_done() after the processing of the item from
+        # the queue is done.
+        # This is required if your code uses queue.join() but in this
+        # case we use other mechanism to finish execution
         producer_buffer.task_done()
 
 
@@ -86,6 +104,8 @@ async def main():
     shutdown_event = asyncio.Event()
 
     # Set up signal handler for keyboard interrupt
+    # This will allow us to intercept the interruption signal and start
+    # the process of graceful termination.
     def signal_handler():
         if not shutdown_event.is_set():
             print("\nKeyboard interrupt detected. Starting graceful shutdown...")

@@ -1,3 +1,13 @@
+"""
+This is the simplest approach - synchronous call one ofter another.
+While this is working, its performance suffers due to the fact that
+the operations for producing, storing, and in some cases the transformation
+ are often IO bound and just sit and wait for the network without
+ performing actual operations.
+
+The `time.sleep` calls here server the purpose to simulate network delays.
+"""
+
 import dataclasses
 import time
 

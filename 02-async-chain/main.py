@@ -1,3 +1,14 @@
+"""
+Going Async
+
+Here we have changed the methods to be asynchronous, and use `asyncio.sleep`
+to stimulate the network delays, but the performance is still bad.
+The reason is that here we have an "await-chain" the asynchronous processes
+are ready to switch context, but due to the chaining there is nothing else
+to pick work - the next method in the chain is actually waiting for the
+previous to complete execution and return result.
+"""
+
 import asyncio
 import dataclasses
 import time

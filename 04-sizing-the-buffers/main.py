@@ -1,3 +1,11 @@
+"""
+Using Sized Buffers
+
+Here we overcome the problem described in the previous implementation,
+by setting a max size of the queue. Once the max size is reached, the
+put operation is blocked until an item has been taken out of the queue.
+"""
+
 import asyncio
 import dataclasses
 import time

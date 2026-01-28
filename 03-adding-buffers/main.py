@@ -1,3 +1,17 @@
+"""
+Adding the Buffers
+
+Here, we are finally doing async properly.
+Each component from out pipeline - the producer, transformer and store,
+run in its own loop. The results from the operations are stored in queues
+and this way shared between the different components.
+
+The downside of this implementation is that due to the lack of sizing of
+the queue, it is possible that one of processes may overtake from the other
+one. In the scenario of the producer being faster than the rest, this may
+result in the queue growing beyond the system limits.
+"""
+
 import asyncio
 import dataclasses
 import time
@@ -65,6 +79,8 @@ async def main():
     transformer_buffer = asyncio.Queue()
 
     # Create tasks for each loop
+    # Note that here we use dependency injection to pass the buffer to the component that
+    # needs to access it.
     producer_task = asyncio.create_task(producer_loop(BatchProducer(), producer_buffer))
     transformer_task = asyncio.create_task(
         transformer_loop(producer_buffer, transformer_buffer)
@@ -72,6 +88,9 @@ async def main():
     store_task = asyncio.create_task(store_loop(transformer_buffer))
 
     # Wait for all tasks to complete (they won't in this case as they're infinite loops)
+    # In this case instead of calling the tasks directly, we run the tasks (the awaitable
+    # objects) concurrently, allowing them to switch context from one to another when
+    # blocked
     await asyncio.gather(producer_task, transformer_task, store_task)
 
 
